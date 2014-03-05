@@ -19,7 +19,8 @@
         </activity>
         <activity
             android:name="com.diegoescudero.space.Options"
-            android:label="@string/title_activity_options" >
+            android:label="@string/title_activity_options"
+            android:screenOrientation="landscape">
         </activity>
     </application>
 

@@ -36,6 +36,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void draw(Canvas canvas) {
         canvas.drawRGB(255, 255, 0);
+//        canvas.drawBitmap();
     }
 
 }
