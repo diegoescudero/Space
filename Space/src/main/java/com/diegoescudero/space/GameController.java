@@ -12,15 +12,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 
-public class PlayScreen extends Activity implements SensorEventListener {
+public class GameController extends Activity implements SensorEventListener {
 
     private GameView gameView;
+    private GameModel gameModel;
+
     private ImageButton optionsButton;
     private GameThread gameThread;
 
     private SensorManager sManager;
     private Sensor accelerometer;
-    private final float noise = (float)2.0;
+    private final float NOISE = (float)2.0;
 
     private float currentX = 0;
     private float currentY = 0;
@@ -35,8 +37,11 @@ public class PlayScreen extends Activity implements SensorEventListener {
         initListeners();
         initSensors();
 
-//        gameThread = new GameThread();
-//        gameThread.start();
+        gameView = new GameView(this);
+        gameModel = new GameModel(this);
+
+        gameThread = new GameThread(gameModel, gameView);
+        gameThread.start();
     }
 
     @Override
@@ -60,7 +65,7 @@ public class PlayScreen extends Activity implements SensorEventListener {
         optionsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent =  new Intent(PlayScreen.this, Options.class);
+                Intent intent =  new Intent(GameController.this, Options.class);
                 startActivity(intent);
             }
         });
@@ -79,18 +84,18 @@ public class PlayScreen extends Activity implements SensorEventListener {
         float y = event.values[1];
         float z = event.values[2];
 
-        if (Math.abs(currentX - x) > noise) {
+        if (Math.abs(currentX - x) > NOISE) {
             currentX = Math.abs(currentX - x);
             Log.d("x", Float.toString(currentX));
 
         }
 
-        if (Math.abs(currentY - y) > noise) {
+        if (Math.abs(currentY - y) > NOISE) {
             currentY = Math.abs(currentY - y);
             Log.d("y", Float.toString(currentY));
         }
 
-        if (Math.abs(currentZ - z) > noise) {
+        if (Math.abs(currentZ - z) > NOISE) {
             currentZ = Math.abs(currentZ - z);
             Log.d("z", Float.toString(currentZ));
         }
