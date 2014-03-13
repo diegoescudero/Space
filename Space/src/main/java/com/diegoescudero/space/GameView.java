@@ -6,33 +6,54 @@ import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-public class GameView extends SurfaceView implements SurfaceHolder.Callback {
+public class GameView extends SurfaceView implements SurfaceHolder.Callback{
+    GameThread thread;
+
     public GameView(Context context) {
         super(context);
+        setup();
     }
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        getHolder().addCallback(this);
-        setFocusable(true);
+        setup();
     }
 
     public GameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        setup();
+    }
+
+    private void setup() {
+        getHolder().addCallback(this);
+        thread = new GameThread(getHolder());
+        setFocusable(true);
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
-        Canvas canvas = holder.lockCanvas();
-        draw(canvas);
-        holder.unlockCanvasAndPost(canvas);
+//        Canvas canvas = holder.lockCanvas();
+//        draw(canvas);
+//        holder.unlockCanvasAndPost(canvas);
+
+        thread.setRunning(true);
+        thread.start();
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+        //nothing
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
-
+        boolean retry = true;
+        while (retry) {
+            try {
+                thread.join();
+                retry = false;
+            }
+            catch (InterruptedException e) {
+                //try again
+            }
+        }
     }
 
     public void draw(Canvas canvas) {

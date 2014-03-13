@@ -2,17 +2,16 @@ package com.diegoescudero.space;
 
 import android.graphics.Canvas;
 import android.util.Log;
+import android.view.SurfaceHolder;
 
 public class GameThread extends Thread {
     private boolean running;
     private final int FPS = 30;
 
-    private GameModel gameModel;
-    private GameView gameView;
+    private SurfaceHolder surfaceHolder;
 
-    public GameThread(GameModel gameModel, GameView gameView) {
-        this.gameModel = gameModel;
-        this.gameView = gameView;
+    public GameThread(SurfaceHolder surfaceHolder) {
+        this.surfaceHolder = surfaceHolder;
     }
 
     @Override
@@ -20,20 +19,9 @@ public class GameThread extends Thread {
         Canvas canvas = null;
 
         while (running) {
-            try {
-                canvas = gameView.getHolder().lockCanvas();
-                if (canvas != null) {
-                    Log.d("SUCCESS", "Should Draw");
-                    canvas = gameModel.drawToCanvas(canvas);
-                    gameView.getHolder().unlockCanvasAndPost(canvas);
-                }
-            }
-            finally {
-                if (canvas != null) {
-                    gameView.getHolder().unlockCanvasAndPost(canvas);
-                }
-                Log.d("FAIL", "Not read");
-            }
+            //Update
+            //Draw
+
         }
     }
 
