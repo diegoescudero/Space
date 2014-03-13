@@ -1,33 +1,43 @@
 package com.diegoescudero.space;
 
 import android.graphics.Canvas;
-import android.view.SurfaceHolder;
+import android.util.Log;
 
 public class GameThread extends Thread {
-    private boolean isRunning;
+    private boolean running;
     private final int FPS = 30;
 
     private GameModel gameModel;
     private GameView gameView;
-    private SurfaceHolder surfaceHolder;
 
     public GameThread(GameModel gameModel, GameView gameView) {
         this.gameModel = gameModel;
         this.gameView = gameView;
-        this.surfaceHolder = this.gameView.getHolder();
     }
 
-    public void start() {
-        isRunning = true;
+    @Override
+    public void run() {
+        Canvas canvas = null;
 
-        while (true) {
-            Canvas c = gameModel.drawToCanvas(surfaceHolder.lockCanvas());
-            surfaceHolder.unlockCanvasAndPost(c);
+        while (running) {
+            try {
+                canvas = gameView.getHolder().lockCanvas();
+                if (canvas != null) {
+                    Log.d("SUCCESS", "Should Draw");
+                    canvas = gameModel.drawToCanvas(canvas);
+                    gameView.getHolder().unlockCanvasAndPost(canvas);
+                }
+            }
+            finally {
+                if (canvas != null) {
+                    gameView.getHolder().unlockCanvasAndPost(canvas);
+                }
+                Log.d("FAIL", "Not read");
+            }
         }
-
     }
 
-    public boolean isRunning() {
-        return isRunning;
+    public void setRunning(boolean r) {
+        running = r;
     }
 }

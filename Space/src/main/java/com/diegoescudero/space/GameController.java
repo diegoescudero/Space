@@ -41,6 +41,7 @@ public class GameController extends Activity implements SensorEventListener {
         gameModel = new GameModel(this);
 
         gameThread = new GameThread(gameModel, gameView);
+        gameThread.setRunning(true);
         gameThread.start();
     }
 
@@ -76,6 +77,20 @@ public class GameController extends Activity implements SensorEventListener {
         accelerometer = sManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+    }
+
+    private void startGameThread() {
+        if (gameThread != null) {
+            gameThread.setRunning(true);
+            gameThread.start();
+        }
+    }
+
+    private void pauseGameThread() {
+        if (gameThread != null) {
+            gameThread.setRunning(false);
+            gameThread.interrupt();
+        }
     }
 
     @Override
