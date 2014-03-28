@@ -21,8 +21,7 @@
         <com.diegoescudero.space.GameView
             android:id="@+id/gameView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#FF00FF"/>
+            android:layout_height="match_parent"/>
 
         <ImageButton
             android:id="@+id/optionsButton"

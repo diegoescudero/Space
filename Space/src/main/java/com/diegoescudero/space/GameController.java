@@ -17,9 +17,9 @@ public class GameController extends Activity implements SensorEventListener {
 
     private GameView gameView;
     private GameModel gameModel;
+    private GameThread gameThread;
 
     private ImageButton optionsButton;
-    private GameThread gameThread;
 
     private SensorManager sManager;
     private Sensor accelerometer;
@@ -38,7 +38,6 @@ public class GameController extends Activity implements SensorEventListener {
         initListeners();
         initSensors();
 
-        gameView = new GameView(this);
         gameModel = new GameModel(this);
     }
 
@@ -57,6 +56,36 @@ public class GameController extends Activity implements SensorEventListener {
     private void initLayout() {
         gameView = (GameView)findViewById(R.id.gameView);
         optionsButton = (ImageButton)findViewById(R.id.optionsButton);
+
+        SurfaceHolder holder = gameView.getHolder();
+        if (holder != null) {
+            holder.addCallback(new SurfaceHolder.Callback() {
+                @Override
+                public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                    startGameThread();
+                }
+
+                @Override
+                public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
+
+                }
+
+                @Override
+                public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                    boolean retry = true;
+
+                    gameThread.setRunning(false);
+                    while (retry) {
+                        try {
+                            gameThread.join();
+                            retry = false;
+                        } catch (InterruptedException e) {
+                            //nothing
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private void initListeners() {
@@ -103,5 +132,34 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         //ignored
+    }
+
+    private void startGameThread() {
+        //if (gameThread == null) {
+            gameThread = new GameThread(gameModel, gameView);
+
+
+            //}
+
+        //if (gameThread.getRunning() == false) {
+            gameThread.setRunning(true);
+            gameThread.start();
+        //}
+    }
+
+    private void pauseGameThread() {
+        gameThread.setRunning(false);
+        gameThread.interrupt();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+//            startGameThread();
+        }
+        else {
+            pauseGameThread();
+        }
     }
 }

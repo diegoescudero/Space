@@ -2,63 +2,36 @@ package com.diegoescudero.space;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-public class GameView extends SurfaceView implements SurfaceHolder.Callback{
+import java.util.Random;
+
+public class GameView extends SurfaceView {
     GameThread thread;
 
     public GameView(Context context) {
         super(context);
-        setup();
     }
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setup();
     }
 
     public GameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        setup();
     }
 
-    private void setup() {
-        getHolder().addCallback(this);
-        thread = new GameThread(getHolder());
-        setFocusable(true);
-    }
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (canvas != null) {
+            int red = (new Random()).nextInt(255);
+            int green = (new Random()).nextInt(255);
+            int blue = (new Random()).nextInt(255);
 
-    public void surfaceCreated(SurfaceHolder holder) {
-//        Canvas canvas = holder.lockCanvas();
-//        draw(canvas);
-//        holder.unlockCanvasAndPost(canvas);
-
-        thread.setRunning(true);
-        thread.start();
-    }
-
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        //nothing
-    }
-
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        boolean retry = true;
-        while (retry) {
-            try {
-                thread.join();
-                retry = false;
-            }
-            catch (InterruptedException e) {
-                //try again
-            }
+            canvas.drawRGB(red, green, blue);
         }
     }
-
-    public void draw(Canvas canvas) {
-        canvas.drawRGB(255, 255, 0);
-//        canvas.drawBitmap();
-    }
-
 }

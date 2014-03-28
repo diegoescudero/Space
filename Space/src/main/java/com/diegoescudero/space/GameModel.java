@@ -1,10 +1,12 @@
 package com.diegoescudero.space;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class GameModel {
     Context context;
@@ -20,14 +22,13 @@ public class GameModel {
         //do nothing for now
     }
 
-    public Canvas drawToCanvas(Canvas c) {
+    public void drawToCanvas(Canvas c) {
         if (c != null) {
-            int width = c.getWidth();
-            int height = c.getHeight();
+            int width = c.getWidth()/2;
+            int height = c.getHeight()/2;
 
-            c.drawBitmap(ship.getBitmap(), new Rect(0, 0, 10, 10), new Rect(0, 0, 10, 10), null);
+            Bitmap b = ship.getBitmap();
+            c.drawBitmap(b, null, new Rect(0, 0, width, height), null);
         }
-
-        return c;
     }
 }
