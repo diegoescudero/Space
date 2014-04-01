@@ -34,11 +34,11 @@ public class GameController extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_screen);
 
+        gameModel = new GameModel(this);
+
         initLayout();
         initListeners();
         initSensors();
-
-        gameModel = new GameModel(this);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-        sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+        sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void initLayout() {
@@ -73,6 +73,7 @@ public class GameController extends Activity implements SensorEventListener {
                 @Override
                 public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                     boolean retry = true;
+//                    Log.d("killed", "the surface is destroyed");
 
                     gameThread.setRunning(false);
                     while (retry) {
@@ -107,26 +108,8 @@ public class GameController extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        float x = event.values[0];
         float y = event.values[1];
-        float z = event.values[2];
-
-        if (Math.abs(currentX - x) > NOISE) {
-            currentX = Math.abs(currentX - x);
-//            Log.d("x", Float.toString(currentX));
-
-        }
-
-        if (Math.abs(currentY - y) > NOISE) {
-            currentY = Math.abs(currentY - y);
-//            Log.d("y", Float.toString(currentY));
-        }
-
-        if (Math.abs(currentZ - z) > NOISE) {
-            currentZ = Math.abs(currentZ - z);
-//            Log.d("z", Float.toString(currentZ));
-        }
-
+        gameModel.setTiltDirection(y);
     }
 
     @Override

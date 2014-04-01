@@ -25,18 +25,18 @@ public class GameThread extends Thread {
         long sleepTime;
 
         while (running) {
-            Log.d("thread", "in loop");
+//            Log.d("thread", "in loop");
             Canvas canvas = null;
             startTime = System.currentTimeMillis();
 
             try {
                 canvas = gameView.getHolder().lockCanvas();
+
                 //Update
                 gameModel.update();
+                
                 //Draw
                 synchronized (gameView.getHolder()) {
-//                    gameView.onDraw(canvas);
-
                     gameModel.drawToCanvas(canvas);
                 }
             } finally {
@@ -49,7 +49,7 @@ public class GameThread extends Thread {
             long endTime = System.currentTimeMillis();
             long timeTaken = endTime - startTime;
             sleepTime = FRAME_TIME - timeTaken;
-            Log.d("TIME", Long.toString(sleepTime));
+//            Log.d("TIME", Long.toString(sleepTime));
             try {
                 if (sleepTime > 0) {
                     sleep(sleepTime);
