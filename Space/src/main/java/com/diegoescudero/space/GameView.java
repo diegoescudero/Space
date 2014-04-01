@@ -2,40 +2,36 @@ package com.diegoescudero.space;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-public class GameView extends SurfaceView implements SurfaceHolder.Callback {
+import java.util.Random;
+
+public class GameView extends SurfaceView {
+    GameThread thread;
+
     public GameView(Context context) {
         super(context);
     }
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        getHolder().addCallback(this);
     }
 
     public GameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
 
-    public void surfaceCreated(SurfaceHolder holder) {
-        Canvas canvas = holder.lockCanvas();
-        draw(canvas);
-        holder.unlockCanvasAndPost(canvas);
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (canvas != null) {
+            int red = (new Random()).nextInt(255);
+            int green = (new Random()).nextInt(255);
+            int blue = (new Random()).nextInt(255);
+
+            canvas.drawRGB(red, green, blue);
+        }
     }
-
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-    }
-
-    public void surfaceDestroyed(SurfaceHolder holder) {
-
-    }
-
-    public void draw(Canvas canvas) {
-        canvas.drawRGB(255, 255, 0);
-    }
-
 }
