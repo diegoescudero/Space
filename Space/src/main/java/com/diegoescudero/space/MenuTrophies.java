@@ -6,16 +6,13 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class Options extends Activity {
+
+public class MenuTrophies extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_options);
+        setContentView(R.layout.activity_menu_trophies);
     }
 
-
-    public void onBackPressed() {
-        finish();
-    }
 }

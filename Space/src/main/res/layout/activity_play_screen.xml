@@ -3,20 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:weightSum="10.0">
+    android:weightSum="100.0">
 
     <LinearLayout
         android:id="@+id/leftSwipe"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1.5"
+        android:layout_weight="15.0"
         android:orientation="horizontal"
         android:background="@drawable/space_metal"/>
 
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="7.0">
+        android:layout_weight="70.0">
 
         <com.diegoescudero.space.GameView
             android:id="@+id/gameView"
@@ -37,7 +37,7 @@
         android:id="@+id/rightSwipe"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1.5"
+        android:layout_weight="15.0"
         android:orientation="horizontal"
         android:background="@drawable/space_metal"/>
 

@@ -8,7 +8,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.ImageButton;
@@ -17,7 +16,7 @@ public class GameController extends Activity implements SensorEventListener {
 
     private GameView gameView;
     private GameModel gameModel;
-    private GameThread gameThread;
+    private GameThread gameThread = null;
 
     private ImageButton optionsButton;
 
@@ -50,7 +49,7 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-        sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
     private void initLayout() {
@@ -93,7 +92,7 @@ public class GameController extends Activity implements SensorEventListener {
         optionsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent =  new Intent(GameController.this, Options.class);
+                Intent intent =  new Intent(GameController.this, MenuOptions.class);
                 startActivity(intent);
             }
         });
@@ -103,13 +102,13 @@ public class GameController extends Activity implements SensorEventListener {
         sManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+//        sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         float y = event.values[1];
-        gameModel.setTiltDirection(y);
+        gameModel.updateShipVelocity(y);
     }
 
     @Override
@@ -118,16 +117,12 @@ public class GameController extends Activity implements SensorEventListener {
     }
 
     private void startGameThread() {
-        //if (gameThread == null) {
+//        if (gameThread == null) {
             gameThread = new GameThread(gameModel, gameView);
+//        }
 
-
-            //}
-
-        //if (gameThread.getRunning() == false) {
-            gameThread.setRunning(true);
-            gameThread.start();
-        //}
+        gameThread.setRunning(true);
+        gameThread.start();
     }
 
     private void pauseGameThread() {
@@ -139,7 +134,7 @@ public class GameController extends Activity implements SensorEventListener {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
-//            startGameThread();
+            startGameThread();
         }
         else {
             pauseGameThread();

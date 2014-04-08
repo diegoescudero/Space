@@ -24,14 +24,14 @@ public class GameView extends SurfaceView {
         super(context, attrs, defStyle);
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        if (canvas != null) {
-            int red = (new Random()).nextInt(255);
-            int green = (new Random()).nextInt(255);
-            int blue = (new Random()).nextInt(255);
-
-            canvas.drawRGB(red, green, blue);
-        }
-    }
+//    @Override
+//    protected void onDraw(Canvas canvas) {
+//        if (canvas != null) {
+//            int red = (new Random()).nextInt(255);
+//            int green = (new Random()).nextInt(255);
+//            int blue = (new Random()).nextInt(255);
+//
+//            canvas.drawRGB(red, green, blue);
+//        }
+//    }
 }
