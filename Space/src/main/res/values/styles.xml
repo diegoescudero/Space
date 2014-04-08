@@ -1,8 +1,11 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
+    <style name="AppTheme" parent="android:Theme.Black.NoTitleBar.Fullscreen">
         <!-- Customize your theme here. -->
+        <!--<item name="android:windowNoTitle">false</item>-->
+        <!--<item name="android:windowFullscreen">true</item>-->
+        <!--<item name="android:windowIsFloating">false</item>-->
     </style>
 
 </resources>

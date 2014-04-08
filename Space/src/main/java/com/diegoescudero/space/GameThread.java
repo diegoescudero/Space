@@ -8,8 +8,9 @@ import java.util.Random;
 
 public class GameThread extends Thread {
     private boolean running;
-    private final long FPS = 30;
-    private final long FRAME_TIME = 1000 / FPS;
+    private final int FPS = 30;
+    private final int FRAME_TIME = 1000 / FPS;
+    private final int FRAME_SKIPS = 5;
 
     private GameModel gameModel;
     private GameView gameView;
@@ -21,15 +22,19 @@ public class GameThread extends Thread {
 
     @Override
     public void run() {
+        Canvas canvas;
         long startTime;
+        long timeTaken;
         long sleepTime;
+        int framesSkipped;
 
-        while (running) {
-//            Log.d("thread", "in loop");
-            Canvas canvas = null;
-            startTime = System.currentTimeMillis();
+        while (running && !interrupted()) {
+            canvas = null;
 
+            //Update and Draw
             try {
+                framesSkipped = 0;
+                startTime = System.currentTimeMillis();
                 canvas = gameView.getHolder().lockCanvas();
 
                 //Update
@@ -46,16 +51,17 @@ public class GameThread extends Thread {
             }
 
             //Sleep
-            long endTime = System.currentTimeMillis();
-            long timeTaken = endTime - startTime;
+            timeTaken = System.currentTimeMillis() - startTime;
             sleepTime = FRAME_TIME - timeTaken;
-//            Log.d("TIME", Long.toString(sleepTime));
+//            Log.d("SleepTime", Long.toString(sleepTime));
             try {
                 if (sleepTime > 0) {
                     sleep(sleepTime);
                 }
-                else {
-                    sleep(10);
+                while (framesSkipped < FRAME_SKIPS && sleepTime < 0) {
+                    gameModel.update();
+                    sleepTime += FRAME_TIME;
+                    framesSkipped++;
                 }
             }
             catch (InterruptedException e) {
