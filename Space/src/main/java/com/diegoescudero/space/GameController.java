@@ -8,9 +8,12 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v4.view.MotionEventCompat;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
 public class GameController extends Activity implements SensorEventListener {
 
@@ -18,15 +21,15 @@ public class GameController extends Activity implements SensorEventListener {
     private GameModel gameModel;
     private GameThread gameThread = null;
 
+    private LinearLayout leftSwipe;
+
     private ImageButton optionsButton;
 
     private SensorManager sManager;
     private Sensor accelerometer;
-    private final float NOISE = (float)2.0;
+    private float currentTilt = 0;
 
-    private float currentX = 0;
-    private float currentY = 0;
-    private float currentZ = 0;
+    private int playerShots = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +52,21 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
+
+        View decorView = getWindow().getDecorView();
+        // Hide both the navigation bar and the status bar.
+        // SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+        // a general rule, you should design your app to hide the status bar whenever you
+        // hide the navigation bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+
         sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
     private void initLayout() {
+        leftSwipe = (LinearLayout)findViewById(R.id.leftSwipe);
         gameView = (GameView)findViewById(R.id.gameView);
         optionsButton = (ImageButton)findViewById(R.id.optionsButton);
 
@@ -94,6 +108,22 @@ public class GameController extends Activity implements SensorEventListener {
             public void onClick(View v) {
                 Intent intent =  new Intent(GameController.this, MenuOptions.class);
                 startActivity(intent);
+                finish();
+            }
+        });
+
+        leftSwipe.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                int action = MotionEventCompat.getActionMasked(event);
+
+                switch(action) {
+                    case MotionEvent.ACTION_DOWN:
+                        playerShots++;
+                        return true;
+                }
+
+                return false;
             }
         });
     }
@@ -108,17 +138,16 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         float y = event.values[1];
-        gameModel.updateShipVelocity(y);
+        currentTilt = y;
+//        gameModel.updateShipVelocity(y);
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        //ignored
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     private void startGameThread() {
 //        if (gameThread == null) {
-            gameThread = new GameThread(gameModel, gameView);
+            gameThread = new GameThread(gameModel, gameView, this);
 //        }
 
         gameThread.setRunning(true);
@@ -139,5 +168,16 @@ public class GameController extends Activity implements SensorEventListener {
         else {
             pauseGameThread();
         }
+    }
+
+    public float getCurrentTilt() {
+        return currentTilt;
+    }
+
+    public int getPlayerShots() {
+        int temp = playerShots;
+        playerShots = 0;
+
+        return temp;
     }
 }

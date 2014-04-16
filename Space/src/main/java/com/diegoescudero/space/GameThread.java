@@ -14,10 +14,12 @@ public class GameThread extends Thread {
 
     private GameModel gameModel;
     private GameView gameView;
+    private GameController gameController;
 
-    public GameThread(GameModel model, GameView view) {
+    public GameThread(GameModel model, GameView view, GameController controller) {
         gameModel = model;
         gameView = view;
+        gameController = controller;
     }
 
     @Override
@@ -38,8 +40,8 @@ public class GameThread extends Thread {
                 canvas = gameView.getHolder().lockCanvas();
 
                 //Update
-                gameModel.update();
-                
+                gameModel.update(gameController.getPlayerShots(), gameController.getCurrentTilt());
+
                 //Draw
                 synchronized (gameView.getHolder()) {
                     gameModel.drawToCanvas(canvas);
@@ -58,11 +60,11 @@ public class GameThread extends Thread {
                 if (sleepTime > 0) {
                     sleep(sleepTime);
                 }
-                while (framesSkipped < FRAME_SKIPS && sleepTime < 0) {
-                    gameModel.update();
-                    sleepTime += FRAME_TIME;
-                    framesSkipped++;
-                }
+//                while (framesSkipped < FRAME_SKIPS && sleepTime < 0) {
+//                    gameModel.update(playerShots, currentTilt);
+//                    sleepTime += FRAME_TIME;
+//                    framesSkipped++;
+//                }
             }
             catch (InterruptedException e) {
             }
