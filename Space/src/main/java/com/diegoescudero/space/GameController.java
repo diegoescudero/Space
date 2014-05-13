@@ -13,7 +13,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
+
+import java.util.ArrayList;
 
 public class GameController extends Activity implements SensorEventListener {
 
@@ -21,13 +22,11 @@ public class GameController extends Activity implements SensorEventListener {
     private GameModel gameModel;
     private GameThread gameThread = null;
 
-    private LinearLayout leftSwipe;
-
     private ImageButton optionsButton;
 
     private SensorManager sManager;
     private Sensor accelerometer;
-    private float currentTilt = 0;
+    private ArrayList<Float> tilts = new ArrayList<Float>();
 
     private int playerShots = 0;
 
@@ -52,21 +51,10 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-
-        View decorView = getWindow().getDecorView();
-        // Hide both the navigation bar and the status bar.
-        // SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
-        // a general rule, you should design your app to hide the status bar whenever you
-        // hide the navigation bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
-
         sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
     private void initLayout() {
-        leftSwipe = (LinearLayout)findViewById(R.id.leftSwipe);
         gameView = (GameView)findViewById(R.id.gameView);
         optionsButton = (ImageButton)findViewById(R.id.optionsButton);
 
@@ -75,28 +63,15 @@ public class GameController extends Activity implements SensorEventListener {
             holder.addCallback(new SurfaceHolder.Callback() {
                 @Override
                 public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                    startGameThread();
+                    createGameThread();
                 }
 
                 @Override
-                public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
-
-                }
+                public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {}
 
                 @Override
                 public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-                    boolean retry = true;
-//                    Log.d("killed", "the surface is destroyed");
-
-                    gameThread.setRunning(false);
-                    while (retry) {
-                        try {
-                            gameThread.join();
-                            retry = false;
-                        } catch (InterruptedException e) {
-                            //nothing
-                        }
-                    }
+                    killThread();
                 }
             });
         }
@@ -112,7 +87,7 @@ public class GameController extends Activity implements SensorEventListener {
             }
         });
 
-        leftSwipe.setOnTouchListener(new View.OnTouchListener() {
+        gameView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
@@ -137,26 +112,49 @@ public class GameController extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        float y = event.values[1];
-        currentTilt = y;
-//        gameModel.updateShipVelocity(y);
+        float x = event.values[0];
+        synchronized (tilts) {
+            tilts.add(-x);
+        }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    private void startGameThread() {
-//        if (gameThread == null) {
-            gameThread = new GameThread(gameModel, gameView, this);
-//        }
+    private void killThread() {
+        boolean retry = true;
+//                    Log.d("killed", "the surface is destroyed");
 
-        gameThread.setRunning(true);
-        gameThread.start();
+        gameThread.setRunning(false);
+        while (retry) {
+            try {
+                gameThread.join(0);
+                retry = false;
+            } catch (InterruptedException e) {
+                //do nothing
+            }
+        }
+    }
+
+    private void createGameThread() {
+        if (gameThread == null) {
+            gameThread = new GameThread(gameModel, gameView, this);
+            gameThread.setRunning(true);
+            gameThread.start();
+        }
+    }
+
+    private void startGameThread() {
+        if (gameThread != null) {
+            gameThread.setRunning(true);
+        }
     }
 
     private void pauseGameThread() {
-        gameThread.setRunning(false);
-        gameThread.interrupt();
+        if (gameThread != null) {
+            gameThread.setRunning(false);
+//            gameThread.interrupt();
+        }
     }
 
     @Override
@@ -170,8 +168,26 @@ public class GameController extends Activity implements SensorEventListener {
         }
     }
 
+    public void launchContinueMenu() {
+        Intent intent = new Intent(this, MenuContinue.class);
+        startActivity(intent);
+        finish();
+    }
+
     public float getCurrentTilt() {
-        return currentTilt;
+        float avg = 0;
+
+        synchronized (tilts) {
+            int size = tilts.size();
+
+            for (float f : tilts) {
+                avg += f / size;
+            }
+
+            tilts.clear();
+        }
+
+        return avg;
     }
 
     public int getPlayerShots() {

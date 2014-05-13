@@ -8,5 +8,6 @@
     <string name="title_activity_menu_main">MenuMain</string>
     <string name="title_activity_menu_trophies">MenuTrophies</string>
     <string name="title_activity_menu_upgrades">MenuUpgrades</string>
+    <string name="title_activity_menu_continue">MenuContinue</string>
 
 </resources>

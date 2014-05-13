@@ -7,8 +7,8 @@ import android.view.SurfaceHolder;
 import java.util.Random;
 
 public class GameThread extends Thread {
-    private boolean running;
-    private final int FPS = 30;
+    private boolean running = false;
+    private final int FPS = 60;
     private final int FRAME_TIME = 1000 / FPS;
     private final int FRAME_SKIPS = 5;
 
@@ -30,7 +30,7 @@ public class GameThread extends Thread {
         long sleepTime;
         int framesSkipped;
 
-        while (running && !interrupted()) {
+        while (running) {
             canvas = null;
 
             //Update and Draw
@@ -42,10 +42,15 @@ public class GameThread extends Thread {
                 //Update
                 gameModel.update(gameController.getPlayerShots(), gameController.getCurrentTilt());
 
-                //Draw
-                synchronized (gameView.getHolder()) {
-                    gameModel.drawToCanvas(canvas);
+                //Game Over?
+                if (gameModel.isGameOver()) {
+                    running = false;
                 }
+
+                //Draw
+//                synchronized (gameView.getHolder()) {
+                    gameModel.drawToCanvas(canvas);
+//                }
             } finally {
                 if (canvas != null) {
                     gameView.getHolder().unlockCanvasAndPost(canvas);
@@ -68,6 +73,10 @@ public class GameThread extends Thread {
             }
             catch (InterruptedException e) {
             }
+        }
+
+        if (gameModel.isGameOver()) {
+            gameController.launchContinueMenu();
         }
     }
 

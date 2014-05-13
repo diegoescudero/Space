@@ -10,17 +10,17 @@
         <activity
             android:name="com.diegoescudero.space.GameController"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name="com.diegoescudero.space.MenuOptions"
             android:label="@string/title_activity_options"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name="com.diegoescudero.space.MenuMain"
             android:label="@string/app_name"
-            android:screenOrientation="landscape">
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,12 +30,17 @@
         <activity
             android:name="com.diegoescudero.space.MenuTrophies"
             android:label="@string/title_activity_menu_trophies"
-            android:screenOrientation="landscape">
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name="com.diegoescudero.space.MenuUpgrades"
             android:label="@string/title_activity_menu_upgrades"
-            android:screenOrientation="landscape">
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name="com.diegoescudero.space.MenuContinue"
+            android:label="@string/title_activity_menu_continue"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 
