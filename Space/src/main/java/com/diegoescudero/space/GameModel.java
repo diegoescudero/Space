@@ -56,7 +56,7 @@ public class GameModel {
     //Asteroids
     private Sprite asteroidSprite;
     private ArrayList<Rect> asteroidRects = new ArrayList<Rect>();
-    private ArrayList<Rect> usedAsteroidRects = new ArrayList<Rect>();
+    private ArrayList<Rect> freeAsteroidRects = new ArrayList<Rect>();
     private final int ASTEROID_COUNT_MAX = 10;
     private int asteroidCount = 0;
     private int asteroidRadius = 0;
@@ -146,37 +146,6 @@ public class GameModel {
         }
     }
 
-    private void assignUnusedAsteroids() {
-        while (asteroidRects.size() > 0 && emptySpawnQuads.size() > 0) {
-            Random rand = new Random();
-
-            //Pick random quadrant
-            Quadrant q = emptySpawnQuads.get(rand.nextInt(emptySpawnQuads.size()));
-
-            //Calculate random asteroid position in quadrant
-            Rect qRect = q.getLocation();
-            int left = rand.nextInt(quadWidth - asteroidRadius * 2) + qRect.left;
-            int top = rand.nextInt(quadHeight - asteroidRadius * 2) + qRect.top;
-
-            //Get asteroid rect to transfer to quadrant
-            Rect r = asteroidRects.get(asteroidRects.size() - 1);
-
-            //Update rect
-            r.left = left;
-            r.top = top;
-            r.right = left + asteroidRadius * 2;
-            r.bottom = top + asteroidRadius * 2;
-
-            //Add asteroid data to quadrant
-            q.addSprite(r, asteroidSprite);
-
-            //Remove quadrant from empty list and remove
-            asteroidRects.remove(asteroidRects.size() - 1);
-            usedAsteroidRects.add(r);
-            emptySpawnQuads.remove(q);
-        }
-    }
-
     public void update(int playerShots, float tilt) {
         if (!isGameOver && initialized) {
             updateVelocityFromTilt(tilt);
@@ -236,7 +205,7 @@ public class GameModel {
     }
 
     private void updateAsteroidPositions() {
-        for (Rect r : usedAsteroidRects) {
+        for (Rect r : asteroidRects) {
             r.top += PLAYER_VELOCITY_MAX;
             r.bottom += PLAYER_VELOCITY_MAX;
             r.left -= playerVelocity;
@@ -245,25 +214,61 @@ public class GameModel {
     }
 
     private void recalculateAsteroidQuadrants() {
+//        for (int row = 0; row < QUAD_GRID_SIZE; row++) {
+//            for (int col = 0; col < QUAD_GRID_SIZE; col++) {
+//                boolean placedAsteroid = false;
+//                quads[row][col].clearSprites();
+//
+//                for (Rect r : asteroidRects) {
+//                    if (rectsOverlap(quads[row][col].getLocation(), r)) {
+//                        quads[row][col].addSprite(r, asteroidSprite);
+//                        placedAsteroid = true;
+//                    }
+//                }
+//
+//                if (!placedAsteroid && !emptySpawnQuads.contains(quads[row][col]) && !visibleQuads.contains(quads[row][col])) {
+//                    emptySpawnQuads.add(quads[row][col]);
+//                }
+//            }
+//        }
+
+        //Clear free rects list
+        freeAsteroidRects.clear();
+
+        //Clear all quadrants
         for (int row = 0; row < QUAD_GRID_SIZE; row++) {
             for (int col = 0; col < QUAD_GRID_SIZE; col++) {
-                boolean placedAsteroid = false;
                 quads[row][col].clearSprites();
+            }
+        }
 
-                for (Rect r : asteroidRects) {
+        //Re-assign rects to quadrants
+        for (Rect r : asteroidRects) {
+            boolean rectAdded = false;
+
+            for (int row = 0; row < QUAD_GRID_SIZE; row++) {
+                for (int col = 0; col < QUAD_GRID_SIZE; col++) {
                     if (rectsOverlap(quads[row][col].getLocation(), r)) {
+                        rectAdded = true;
                         quads[row][col].addSprite(r, asteroidSprite);
-                        placedAsteroid = true;
                     }
                 }
+            }
 
-                if (!placedAsteroid && !emptySpawnQuads.contains(quads[row][col]) && !visibleQuads.contains(quads[row][col])) {
+            if (!rectAdded) {
+                freeAsteroidRects.add(r);
+            }
+        }
+
+        //List emptySpawnQuads
+        emptySpawnQuads.clear();
+        for (int row = 0; row < QUAD_GRID_SIZE; row++) {
+            for (int col = 0; col < QUAD_GRID_SIZE; col++) {
+                if (quads[row][col].isEmpty() && !visibleQuads.contains(quads[row][col])) {
                     emptySpawnQuads.add(quads[row][col]);
                 }
             }
         }
-
-
 
 //        HashSet<Rect> updated = new HashSet<Rect>();
 //        HashMap<Rect, Point> remove = new HashMap<Rect, Point>();
@@ -324,6 +329,36 @@ public class GameModel {
 //                emptySpawnQuads.add(quads[p.x][p.y]);
 //            }
 //        }
+    }
+
+    private void assignUnusedAsteroids() {
+        while (freeAsteroidRects.size() > 0 && emptySpawnQuads.size() > 0) {
+            Random rand = new Random();
+
+            //Pick random quadrant
+            Quadrant q = emptySpawnQuads.get(rand.nextInt(emptySpawnQuads.size()));
+
+            //Calculate random asteroid position in quadrant
+            Rect qRect = q.getLocation();
+            int left = rand.nextInt(quadWidth - asteroidRadius * 2) + qRect.left;
+            int top = rand.nextInt(quadHeight - asteroidRadius * 2) + qRect.top;
+
+            //Get asteroid rect to transfer to quadrant
+            Rect r = freeAsteroidRects.get(freeAsteroidRects.size() - 1);
+
+            //Place rect
+            r.left = left;
+            r.top = top;
+            r.right = left + asteroidRadius * 2;
+            r.bottom = top + asteroidRadius * 2;
+
+            //Add asteroid data to quadrant
+            q.addSprite(r, asteroidSprite);
+
+            //Remove quadrant from empty list and remove
+            freeAsteroidRects.remove(freeAsteroidRects.size() - 1);
+            emptySpawnQuads.remove(q);
+        }
     }
 
 //    private void checkForCollisions() {
