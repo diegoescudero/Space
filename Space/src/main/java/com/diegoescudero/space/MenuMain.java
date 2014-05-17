@@ -15,7 +15,6 @@ public class MenuMain extends Activity {
     private Button playButton;
     private Button upgradesButton;
     private Button trophiesButton;
-    private Button optionsButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +29,6 @@ public class MenuMain extends Activity {
         playButton = (Button)findViewById(R.id.play);
         upgradesButton = (Button)findViewById(R.id.upgrades);
         trophiesButton = (Button)findViewById(R.id.trophies);
-        optionsButton = (Button)findViewById(R.id.options);
     }
 
     private void initListeners() {
@@ -54,14 +52,6 @@ public class MenuMain extends Activity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MenuMain.this, MenuTrophies.class);
-                startActivity(intent);
-            }
-        });
-
-        optionsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MenuMain.this, MenuOptions.class);
                 startActivity(intent);
             }
         });

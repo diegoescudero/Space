@@ -22,7 +22,7 @@ public class GameController extends Activity implements SensorEventListener {
     private GameModel gameModel;
     private GameThread gameThread = null;
 
-    private ImageButton optionsButton;
+    private ImageButton pauseButton;
 
     private SensorManager sManager;
     private Sensor accelerometer;
@@ -56,7 +56,7 @@ public class GameController extends Activity implements SensorEventListener {
 
     private void initLayout() {
         gameView = (GameView)findViewById(R.id.gameView);
-        optionsButton = (ImageButton)findViewById(R.id.optionsButton);
+        pauseButton = (ImageButton)findViewById(R.id.optionsButton);
 
         SurfaceHolder holder = gameView.getHolder();
         if (holder != null) {
@@ -78,11 +78,11 @@ public class GameController extends Activity implements SensorEventListener {
     }
 
     private void initListeners() {
-        optionsButton.setOnClickListener(new View.OnClickListener() {
+        pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent =  new Intent(GameController.this, MenuOptions.class);
-                startActivity(intent);
+//                Intent intent = new Intent(GameController.this, MenuMain.class);
+//                startActivity(intent);
                 finish();
             }
         });
