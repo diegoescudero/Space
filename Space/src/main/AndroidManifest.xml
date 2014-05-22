@@ -13,11 +13,6 @@
             android:screenOrientation="portrait" >
         </activity>
         <activity
-            android:name="com.diegoescudero.space.MenuOptions"
-            android:label="@string/title_activity_options"
-            android:screenOrientation="portrait" >
-        </activity>
-        <activity
             android:name="com.diegoescudero.space.MenuMain"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
