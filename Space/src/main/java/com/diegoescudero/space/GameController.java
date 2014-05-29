@@ -27,6 +27,7 @@ public class GameController extends Activity implements SensorEventListener {
     private SensorManager sManager;
     private Sensor accelerometer;
     private ArrayList<Float> tilts = new ArrayList<Float>();
+    private float tilt = 0;
 
     private int playerShots = 0;
 
@@ -56,6 +57,7 @@ public class GameController extends Activity implements SensorEventListener {
 
     private void initLayout() {
         gameView = (GameView)findViewById(R.id.gameView);
+        gameView.setGameModel(gameModel);
         pauseButton = (ImageButton)findViewById(R.id.optionsButton);
 
         SurfaceHolder holder = gameView.getHolder();
@@ -112,10 +114,11 @@ public class GameController extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        float x = event.values[0];
-        synchronized (tilts) {
-            tilts.add(-x);
-        }
+        tilt = -event.values[0];
+//        float x = event.values[0];
+//        synchronized (tilts) {
+//            tilts.add(-x);
+//        }
     }
 
     @Override
@@ -175,19 +178,20 @@ public class GameController extends Activity implements SensorEventListener {
     }
 
     public float getCurrentTilt() {
-        float avg = 0;
-
-        synchronized (tilts) {
-            int size = tilts.size();
-
-            for (float f : tilts) {
-                avg += f / size;
-            }
-
-            tilts.clear();
-        }
-
-        return avg;
+//        float avg = 0;
+//
+//        synchronized (tilts) {
+//            int size = tilts.size();
+//
+//            for (float f : tilts) {
+//                avg += f / size;
+//            }
+//
+//            tilts.clear();
+//        }
+//
+//        return avg;
+        return tilt;
     }
 
     public int getPlayerShots() {

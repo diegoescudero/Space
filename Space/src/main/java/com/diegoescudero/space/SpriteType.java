@@ -7,7 +7,7 @@ public enum SpriteType {
     PLAYER (R.drawable.player, new HashSet<Animation>(Arrays.asList(Animation.TILT_LEFT, Animation.TILT_RIGHT)), 9, 2),
     ASTEROID (R.drawable.asteroid, new HashSet<Animation>(Arrays.asList(Animation.DEATH)), 1, 1),
     MISSILE (R.drawable.missile, new HashSet<Animation>(Arrays.asList(Animation.DEATH)), 1, 1),
-    STAR (R.drawable.sun, null, 1, 1);
+    STAR (R.drawable.sun, new HashSet<Animation>(), 1, 1);
 
     private int resource;
     private HashSet<Animation> animations;

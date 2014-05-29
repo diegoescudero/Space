@@ -8,7 +8,7 @@ public class Quadrant {
     private int row;
     private int col;
     private Rect location;
-    private HashMap<Rect, Sprite> asteroids = new HashMap<Rect, Sprite>();
+    private HashMap<Rect, Sprite> asteroids = new HashMap<Rect, Sprite>(); //TODO CHANGE TO SET
 
     public Quadrant(Rect r, int row, int col) {
         this.location = r;
