@@ -43,23 +43,24 @@ public class GameView extends SurfaceView {
 
             //Draw Stars
             Sprite star = gameModel.getStarSprite();
-            HashMap<Rect, Integer> stars = gameModel.getStars();
-            for (Rect r : stars.keySet()) {
-                canvas.drawBitmap(star.getBitmap(), star.getFrameRect(), r, null);
+            HashMap<SpritePosition, Integer> stars = gameModel.getStars();
+            for (SpritePosition p : stars.keySet()) {
+                canvas.drawBitmap(star.getBitmap(), star.getFrameRect(), p.rect(), null);
             }
 
             //Draw Player Ship
             Sprite player = gameModel.getPlayerSprite();
-            Rect playerLocation = gameModel.getPlayerLocation();
+            SpritePosition playerPosition = gameModel.getPlayerPosition();
             if (player != null) {
-                canvas.drawBitmap(player.getBitmap(), player.getFrameRect(), playerLocation, null);
+                canvas.drawBitmap(player.getBitmap(), player.getFrameRect(), playerPosition.rect(), null);
             }
 
             //Draw Asteroids
+            Sprite asteroid = gameModel.getAsteroidSprite();
             ArrayList<Quadrant> visibleQuads = gameModel.getVisibleQuads();
             for (Quadrant q : visibleQuads) {
-                for (Map.Entry<Rect, Sprite> e : q.getAsteroids().entrySet()) {
-                    canvas.drawBitmap(e.getValue().getBitmap(), e.getValue().getFrameRect(), e.getKey(), null);
+                for (SpritePosition p : q.getAsteroids()) {
+                    canvas.drawBitmap(asteroid.getBitmap(), asteroid.getFrameRect(), p.rect(), null);
                 }
             }
         }

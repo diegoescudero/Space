@@ -2,7 +2,6 @@ package com.diegoescudero.space;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Rect;
 
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public class GameModel {
 
     //Tilt
     private final float TILT_CENTER_LIMIT = 0.5f;
-    private final float TILT_MAX = 4.0f;
+    private final float TILT_MAX = 3.0f;
 
     //Game Screen
     private int gameFieldWidth = 0;
@@ -44,31 +43,30 @@ public class GameModel {
 
     //Player
     private int playerHealth = 100;
-    private final double PLAYER_VELOCITY_X_MAX_PERC = 1.0d; //100% of screen in 1 second
-    private final double PLAYER_VELOCITY_Y_MAX_PERC = 0.75d; //75% of screen in 1 second
-    private final double PLAYER_ACCELERATION_X_PERC = 0.5d; //50% of screen in 1 second
+    private final int PLAYER_SIZE_FACTOR = 6;
+    private final double PLAYER_VELOCITY_X_MAX_PERC = 1.0d / 4; //100% of screen in 1 second
+    private final double PLAYER_VELOCITY_Y_MAX_PERC = 0.75d / 4; //75% of screen in 1 second
+    private final double PLAYER_ACCELERATION_X_PERC = 0.5d / 4; //50% of screen in 1 second
     private int PLAYER_VELOCITY_X_MAX = 0;
     private int PLAYER_VELOCITY_Y_MAX = 0;
     private int PLAYER_ACCELERATION_X = 0;
-    private int playerVelocityX = 0;
-    private int playerVelocityY = 0;
-    private int playerWidth = 0;
-    private int playerHeight = 0;
+    private double playerVelocityX = 0;
+    private double playerVelocityY = 0;
     private Sprite playerSprite = null;
-    private Rect playerLocation = null;
+    private SpritePosition playerPosition;
 
     //Asteroids
     private Sprite asteroidSprite;
-    private ArrayList<Rect> asteroidRects = new ArrayList<Rect>();
-    private ArrayList<Rect> freeAsteroidRects = new ArrayList<Rect>();
-    private final int ASTEROID_COUNT_MAX = 10;
+    private ArrayList<SpritePosition> asteroidPositions = new ArrayList<SpritePosition>();
+    private ArrayList<SpritePosition> freeAsteroidPositions = new ArrayList<SpritePosition>();
+    private int ASTEROID_COUNT_MAX = 10;
     private int asteroidCount = 0;
     private int asteroidRadius = 0;
 
     //Stars
     private Sprite starSprite;
-    private HashMap<Rect, Integer> stars = new HashMap<Rect, Integer>();
-    private ArrayList<Rect> freeStars = new ArrayList<Rect>();
+    private HashMap<SpritePosition, Integer> stars = new HashMap<SpritePosition, Integer>();
+    private ArrayList<SpritePosition> freeStars = new ArrayList<SpritePosition>();
     private final int STAR_COUNT_MAX = 100;
     private final double STAR_VELOCITY_MAX_PERC = 0.05d;
     private int STAR_VELOCITY_MAX = 0;
@@ -98,20 +96,14 @@ public class GameModel {
         gameFieldHeight = canvasHeight * QUAD_Y_SCALE;
 
         //Size the player
-        playerWidth = canvasWidth / 6;
-        playerHeight = playerWidth;
+        int pWidth = canvasWidth / PLAYER_SIZE_FACTOR;
+        int pLeft = (canvasWidth / 2) - (pWidth / 2);
+        int pTop = 3 * canvasHeight / 4;
+        playerSprite = new Sprite(context, SpriteType.PLAYER, pWidth, pWidth);
+        playerPosition = new SpritePosition(pLeft, pTop, pWidth, pWidth);
 
         //Size the asteroids
         asteroidRadius = canvasWidth / 8;
-
-        //Create the player
-        playerSprite = new Sprite(context, SpriteType.PLAYER, playerWidth, playerHeight);
-        playerLocation = new Rect(
-                canvasWidth/2 - playerWidth/2,
-                3*canvasHeight/4,
-                canvasWidth/2 + playerWidth/2,
-                3*canvasHeight/4 + playerHeight
-        );
 
         //Create Asteroid
         asteroidSprite = new Sprite(context, SpriteType.ASTEROID, asteroidRadius * 2, asteroidRadius * 2);
@@ -164,7 +156,7 @@ public class GameModel {
     private void initializePlayerQuadrants() {
         for (int row = 0; row < QUAD_Y_GRID_SIZE; row++) {
             for (int col = 0; col < QUAD_X_GRID_SIZE; col++) {
-                if (Rect.intersects(quads[row][col].getLocation(), playerLocation)) {
+                if (Rect.intersects(quads[row][col].getLocation(), playerPosition.rect())) {
                     playerQuads.add(quads[row][col]);
                 }
             }
@@ -173,7 +165,7 @@ public class GameModel {
 
     private void createAsteroids() {
         for (; asteroidCount < ASTEROID_COUNT_MAX; asteroidCount++) {
-            asteroidRects.add(new Rect(0, 0, 0, 0));
+            asteroidPositions.add(new SpritePosition(0, 0, 0, 0));
         }
     }
 
@@ -187,16 +179,11 @@ public class GameModel {
             left = rand.nextInt(gameFieldWidth - width) - canvasWidth;
             top = rand.nextInt(gameFieldHeight - width) - canvasHeight;
 
-            Rect r = new Rect(
-                    left,
-                    top,
-                    left + width,
-                    top + width
-            );
+            SpritePosition p = new SpritePosition(left, top, width, width);
 
             Integer in = (int) (rand.nextInt(STAR_VELOCITY_MAX) * factor) + (STAR_VELOCITY_MAX / 2);
 
-            stars.put(r, in);
+            stars.put(p, in);
         }
     }
 
@@ -218,7 +205,7 @@ public class GameModel {
             assignFreeStars();
 
             //Check for collisions and game over
-            checkAsteroidCollisions();
+//            checkAsteroidCollisions();
             updateIsGameOver();
         }
     }
@@ -240,29 +227,17 @@ public class GameModel {
     }
 
     private void updateVelocityFromTilt(float tiltPercent) {
-        int targetVelocity = (int) (tiltPercent * PLAYER_VELOCITY_X_MAX);
+        double targetVelocity = tiltPercent * PLAYER_VELOCITY_X_MAX;
 
         //Positive Velocity
         if (playerVelocityX < targetVelocity) {
-            if (playerVelocityX + PLAYER_ACCELERATION_X > targetVelocity) {
-                playerVelocityX = targetVelocity;
-            }
-            else {
-                playerVelocityX += PLAYER_ACCELERATION_X;
-            }
-
+            playerVelocityX += PLAYER_ACCELERATION_X;
             playerVelocityX = Math.min(PLAYER_VELOCITY_X_MAX, playerVelocityX);
         }
 
         //Negative Velocity
         else if (playerVelocityX > targetVelocity) {
-            if (playerVelocityX - PLAYER_ACCELERATION_X < targetVelocity) {
-                playerVelocityX = targetVelocity;
-            }
-            else {
-                playerVelocityX -= PLAYER_ACCELERATION_X;
-            }
-
+            playerVelocityX -= PLAYER_ACCELERATION_X;
             playerVelocityX = Math.max(-PLAYER_VELOCITY_X_MAX, playerVelocityX);
         }
     }
@@ -284,24 +259,21 @@ public class GameModel {
     }
 
     private void updateAsteroidPositions(double seconds) {
-        for (Rect r : asteroidRects) {
-            r.top += playerVelocityY * seconds;
-            r.bottom += playerVelocityY * seconds;
-            r.left -= playerVelocityX * seconds;
-            r.right -= playerVelocityX * seconds;
+        for (SpritePosition p : asteroidPositions) {
+            p.changeX(-playerVelocityX * seconds);
+            p.changeY(playerVelocityY * seconds);
         }
     }
 
     private void updateStarPositions(double seconds) {
-        for (Map.Entry<Rect, Integer> e : stars.entrySet()) {
-            e.getKey().left -= playerVelocityX * seconds;
-            e.getKey().right -= playerVelocityX * seconds;
-            e.getKey().top += (int) (e.getValue() * seconds);
-            e.getKey().bottom += (int) (e.getValue() * seconds);
+        for (Map.Entry<SpritePosition, Integer> e : stars.entrySet()) {
+            SpritePosition p = e.getKey();
+            p.changeX(-playerVelocityX * seconds);
+            p.changeY(e.getValue() * seconds);
 
-            if (e.getKey().top > canvasHeight
-                    || (e.getKey().right < ((QUAD_X_SCALE - 1) / 2) * -canvasWidth)
-                    || (e.getKey().left > (((QUAD_X_SCALE - 1) / 2) * canvasWidth) + canvasWidth)) {
+            if (p.rect().top > canvasHeight
+                    || (p.rect().right < ((QUAD_X_SCALE - 1) / 2) * -canvasWidth)
+                    || (p.rect().left > (((QUAD_X_SCALE - 1) / 2) * canvasWidth) + canvasWidth)) {
                 freeStars.add(e.getKey());
             }
         }
@@ -321,7 +293,7 @@ public class GameModel {
 
     private void recalculateAsteroidQuadrants() {
         //Clear free rects list
-        freeAsteroidRects.clear();
+        freeAsteroidPositions.clear();
 
         //Clear all asteroids from quadrants
         for (int row = 0; row < QUAD_Y_GRID_SIZE; row++) {
@@ -331,7 +303,7 @@ public class GameModel {
         }
 
         //TODO go through each rectangle and check what quadrant they belong to based on the top/bot/left/right boundaries
-//        for (Rect r :  asteroidRects) {
+//        for (Rect r :  asteroidPositions) {
 //            boolean rectAdded = false;
 //
 //            int left = getQuadrantColFromPoint(r.left);
@@ -347,26 +319,26 @@ public class GameModel {
 //            }
 //
 //            if (!rectAdded) {
-//                freeAsteroidRects.add(r);
+//                freeAsteroidPositions.add(r);
 //            }
 //        }
 
         //TODO REPLACE THIS PART
         //Re-assign rects to quadrants
-        for (Rect r : asteroidRects) {
+        for (SpritePosition p : asteroidPositions) {
             boolean rectAdded = false;
 
             for (int row = 0; row < QUAD_Y_GRID_SIZE; row++) {
                 for (int col = 0; col < QUAD_X_GRID_SIZE; col++) {
-                    if (Rect.intersects(quads[row][col].getLocation(), r)) {
+                    if (Rect.intersects(quads[row][col].getLocation(), p.rect())) {
                         rectAdded = true;
-                        quads[row][col].addAsteroid(r, asteroidSprite);
+                        quads[row][col].addAsteroid(p);
                     }
                 }
             }
 
             if (!rectAdded) {
-                freeAsteroidRects.add(r);
+                freeAsteroidPositions.add(p);
             }
         }
 
@@ -380,7 +352,7 @@ public class GameModel {
     }
 
     private void assignFreeAsteroids() {
-        while (freeAsteroidRects.size() > 0 && emptySpawnQuads.size() > 0) {
+        while (freeAsteroidPositions.size() > 0 && emptySpawnQuads.size() > 0) {
 
             //Pick random quadrant
             Quadrant q = emptySpawnQuads.get(rand.nextInt(emptySpawnQuads.size()));
@@ -392,19 +364,20 @@ public class GameModel {
             int top = rand.nextInt(quadHeight - asteroidRadius * 2) + qRect.top;
 
             //Get asteroid rect to transfer to quadrant
-            Rect r = freeAsteroidRects.get(freeAsteroidRects.size() - 1);
+            SpritePosition p = freeAsteroidPositions.get(freeAsteroidPositions.size() - 1);
 
             //Place rect
-            r.left = left;
-            r.top = top;
-            r.right = left + asteroidRadius * 2;
-            r.bottom = top + asteroidRadius * 2;
+            p.setLeft(left);
+            p.setTop(top);
+            p.setWidth(asteroidRadius * 2);
+            p.setHeight(asteroidRadius * 2);
+//            p.recalculateRect();
 
             //Add asteroid data to quadrant
-            q.addAsteroid(r, asteroidSprite);
+            q.addAsteroid(p);
 
             //Remove quadrant from empty list and remove
-            freeAsteroidRects.remove(freeAsteroidRects.size() - 1);
+            freeAsteroidPositions.remove(freeAsteroidPositions.size() - 1);
             emptySpawnQuads.remove(q);
         }
     }
@@ -416,16 +389,13 @@ public class GameModel {
             Rect qRect = spawnQuads.get(index).getLocation();
 
             //New values
-            Rect sRect = freeStars.get(freeStars.size() - 1);
+            SpritePosition p = freeStars.get(freeStars.size() - 1);
 
-            int width = sRect.right - sRect.left;
-            int left = rand.nextInt(quadWidth - width) + qRect.left;
-            int top = rand.nextInt(quadHeight - width) + qRect.top;
+            int left = rand.nextInt(quadWidth - p.getWidth()) + qRect.left;
+            int top = rand.nextInt(quadHeight - p.getHeight()) + qRect.top;
 
-            sRect.left = left;
-            sRect.top = top;
-            sRect.right = left + width;
-            sRect.bottom = top + width;
+            p.setLeft(left);
+            p.setTop(top);
 
             freeStars.remove(freeStars.size() - 1);
         }
@@ -434,8 +404,8 @@ public class GameModel {
     private void checkAsteroidCollisions() {
         for (Quadrant q : playerQuads) {
             if (!q.isEmptyAsteroids()) {
-                for (Rect r : q.getAsteroids().keySet()) {
-                    if (isCollision(r, asteroidSprite, playerLocation, playerSprite)) {
+                for (SpritePosition p : q.getAsteroids()) {
+                    if (isCollision(p.rect(), asteroidSprite, playerPosition.rect(), playerSprite)) {
                         playerHealth = 0;
                         return;
                     }
@@ -491,8 +461,8 @@ public class GameModel {
         return playerSprite;
     }
 
-    public Rect getPlayerLocation() {
-        return playerLocation;
+    public SpritePosition getPlayerPosition() {
+        return playerPosition;
     }
 
     public ArrayList<Quadrant> getVisibleQuads() {
@@ -503,30 +473,34 @@ public class GameModel {
         return starSprite;
     }
 
-    public HashMap<Rect, Integer> getStars() {
+    public Sprite getAsteroidSprite() {
+        return asteroidSprite;
+    }
+
+    public HashMap<SpritePosition, Integer> getStars() {
         return stars;
     }
 
-    public void drawToCanvas(Canvas c) {
-        if (!initialized) {
-            initialize(c);
-        }
-
-        if (c != null) {
-            //Clear Canvas
-            c.drawColor(Color.BLACK);
-
-            //Draw Player Ship
-            if (playerSprite != null) {
-                c.drawBitmap(playerSprite.getBitmap(), playerSprite.getFrameRect(), playerLocation, null);
-            }
-
-            //Draw Asteroids
-            for (Quadrant q : visibleQuads) {
-                for (Map.Entry<Rect, Sprite> e : q.getAsteroids().entrySet()) {
-                    c.drawBitmap(e.getValue().getBitmap(), e.getValue().getFrameRect(), e.getKey(), null);
-                }
-            }
-        }
-    }
+//    public void drawToCanvas(Canvas c) {
+//        if (!initialized) {
+//            initialize(c);
+//        }
+//
+//        if (c != null) {
+//            //Clear Canvas
+//            c.drawColor(Color.BLACK);
+//
+//            //Draw Player Ship
+//            if (playerSprite != null) {
+//                c.drawBitmap(playerSprite.getBitmap(), playerSprite.getFrameRect(), playerLocation, null);
+//            }
+//
+//            //Draw Asteroids
+//            for (Quadrant q : visibleQuads) {
+//                for (Map.Entry<Rect, Sprite> e : q.getAsteroids().entrySet()) {
+//                    c.drawBitmap(e.getValue().getBitmap(), e.getValue().getFrameRect(), e.getKey(), null);
+//                }
+//            }
+//        }
+//    }
 }

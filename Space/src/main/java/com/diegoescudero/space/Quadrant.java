@@ -3,12 +3,13 @@ package com.diegoescudero.space;
 import android.graphics.Rect;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Quadrant {
     private int row;
     private int col;
     private Rect location;
-    private HashMap<Rect, Sprite> asteroids = new HashMap<Rect, Sprite>(); //TODO CHANGE TO SET
+    private HashSet<SpritePosition> asteroids = new HashSet<SpritePosition>();
 
     public Quadrant(Rect r, int row, int col) {
         this.location = r;
@@ -28,20 +29,16 @@ public class Quadrant {
         return col;
     }
 
-    public HashMap<Rect, Sprite> getAsteroids() {
+    public HashSet<SpritePosition> getAsteroids() {
         return asteroids;
     }
 
-    public void addAsteroid(Rect r, Sprite s) {
-        asteroids.put(r, s);
+    public void addAsteroid(SpritePosition p) {
+        asteroids.add(p);
     }
 
     public void clearAsteroids() {
         asteroids.clear();
-    }
-
-    public boolean containsSprite(Rect r) {
-        return asteroids.containsKey(r);
     }
 
     public boolean isEmptyAsteroids() {
