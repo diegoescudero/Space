@@ -3,6 +3,7 @@ package com.diegoescudero.space;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.os.SystemClock;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +15,9 @@ public class GameModel {
     private Context context;
     private boolean isGameOver = false;
     private boolean initialized = false;
-    Random rand = new Random();
+    private Random rand = new Random();
+    private long lastUpdateDeltaMS = 0;
+    private long lastUpdateTimeMS = SystemClock.uptimeMillis();
 
     //Quadrants 6x6 Grid
     private final int QUAD_X_DENSITY = 2;
@@ -44,12 +47,10 @@ public class GameModel {
     //Player
     private int playerHealth = 100;
     private final int PLAYER_SIZE_FACTOR = 6;
-    private final double PLAYER_VELOCITY_X_MAX_PERC = 1.0d / 4; //100% of screen in 1 second
-    private final double PLAYER_VELOCITY_Y_MAX_PERC = 0.75d / 4; //75% of screen in 1 second
-    private final double PLAYER_ACCELERATION_X_PERC = 0.5d / 4; //50% of screen in 1 second
+    private final double PLAYER_VELOCITY_X_MAX_PERC = 1.0d; //100% of screen in 1 second
+    private final double PLAYER_VELOCITY_Y_MAX_PERC = 0.75d; //60% of screen in 1 second
     private int PLAYER_VELOCITY_X_MAX = 0;
     private int PLAYER_VELOCITY_Y_MAX = 0;
-    private int PLAYER_ACCELERATION_X = 0;
     private double playerVelocityX = 0;
     private double playerVelocityY = 0;
     private Sprite playerSprite = null;
@@ -72,13 +73,24 @@ public class GameModel {
     private int STAR_VELOCITY_MAX = 0;
     private int STAR_DIAMETER_MAX = 0;
 
-    //Rockets
-    private Sprite rocketSprite;
-    private ArrayList<Rect> rockets = new ArrayList<Rect>();
+    //Missile
+    private final int MISSILE_SIZE_FACTOR = 6;
+    private final double MISSILE_VELOCITY_X_MAX_PERC = 0.90d;
+    private final double MISSILE_VELOCITY_Y_MAX_PERC = 0.35d;
+    private double MISSILE_VELOCITY_X_MAX;
+    private double MISSILE_VELOCITY_Y_MAX;
+    private Sprite missileSprite;
+    private SpritePosition missilePosition;
+    private boolean missileActive = false;
+    private long lastMissileMS = 0;
 
     //Flares
+    private final int FLARE_SIZE_FACTOR = 8;
+    private final double FLARE_VELOCITY_MAX_PERC = 0.1d;
+    private double FLARE_VELOCITY_MAX;
     private Sprite flareSprite;
-    private ArrayList<Rect> flares = new ArrayList<Rect>();
+    private SpritePosition flarePosition;
+    private boolean flareActive = false;
 
     public GameModel(Context context) {
         this.context = context;
@@ -98,7 +110,7 @@ public class GameModel {
         //Size the player
         int pWidth = canvasWidth / PLAYER_SIZE_FACTOR;
         int pLeft = (canvasWidth / 2) - (pWidth / 2);
-        int pTop = 3 * canvasHeight / 4;
+        int pTop = canvasHeight / 2;
         playerSprite = new Sprite(context, SpriteType.PLAYER, pWidth, pWidth);
         playerPosition = new SpritePosition(pLeft, pTop, pWidth, pWidth);
 
@@ -111,7 +123,6 @@ public class GameModel {
         //Set constants
         PLAYER_VELOCITY_X_MAX = (int) (PLAYER_VELOCITY_X_MAX_PERC * canvasWidth);
         PLAYER_VELOCITY_Y_MAX = (int) (PLAYER_VELOCITY_Y_MAX_PERC * canvasHeight);
-        PLAYER_ACCELERATION_X = (int) (PLAYER_ACCELERATION_X_PERC * canvasWidth);
         playerVelocityY = PLAYER_VELOCITY_Y_MAX;
         STAR_VELOCITY_MAX = (int) (canvasHeight * STAR_VELOCITY_MAX_PERC);
         STAR_DIAMETER_MAX = canvasWidth / 24;
@@ -125,6 +136,21 @@ public class GameModel {
         //Init stars
         starSprite = new Sprite(context, SpriteType.STAR, 100, 100);
         initializeStars();
+
+        //Flare and Missile Velocities
+        FLARE_VELOCITY_MAX = FLARE_VELOCITY_MAX_PERC * canvasHeight;
+        MISSILE_VELOCITY_X_MAX = MISSILE_VELOCITY_X_MAX_PERC * canvasWidth;
+        MISSILE_VELOCITY_Y_MAX = MISSILE_VELOCITY_Y_MAX_PERC * canvasHeight;
+
+        //Flare and Missile Sprites
+        int flareWidth = canvasWidth / FLARE_SIZE_FACTOR;
+        flareSprite = new Sprite(context, SpriteType.FLARE, flareWidth, flareWidth);
+        int missileWidth = canvasWidth / MISSILE_SIZE_FACTOR;
+        missileSprite = new Sprite(context, SpriteType.MISSILE, missileWidth, missileWidth);
+
+        //Flare and Missile initial Positions
+        flarePosition = new SpritePosition(canvasWidth, canvasHeight, flareWidth, flareWidth);
+        missilePosition = new SpritePosition(canvasWidth, canvasHeight, missileWidth, missileWidth);
 
         initialized = true;
     }
@@ -187,9 +213,12 @@ public class GameModel {
         }
     }
 
-    public void update(double seconds, float tilt) {
+    public void update(double seconds, float tilt, Gesture gesture) {
         if (!isGameOver && initialized) {
             float adjustedTilt = getTiltPercent(tilt);
+            long now = SystemClock.uptimeMillis();
+            lastUpdateDeltaMS = now - lastUpdateTimeMS;
+            lastUpdateTimeMS = now;
 
             //Update player based on user input
             updateVelocityFromTilt(adjustedTilt);
@@ -198,14 +227,19 @@ public class GameModel {
             //Update Positions
             updateAsteroidPositions(seconds);
             updateStarPositions(seconds);
+            updateFlarePosition(seconds);
+            updateMissilePosition(seconds);
 
-            //Cleanup gamestate
+            //Cleanup and add to gamestate
             recalculateAsteroidQuadrants();
             assignFreeAsteroids();
             assignFreeStars();
+            createFlare(gesture);
+            createMissile(gesture);
 
             //Check for collisions and game over
-//            checkAsteroidCollisions();
+            checkAsteroidCollisions();
+            checkMissileCollision();
             updateIsGameOver();
         }
     }
@@ -228,18 +262,19 @@ public class GameModel {
 
     private void updateVelocityFromTilt(float tiltPercent) {
         double targetVelocity = tiltPercent * PLAYER_VELOCITY_X_MAX;
+        playerVelocityX = targetVelocity;
 
-        //Positive Velocity
-        if (playerVelocityX < targetVelocity) {
-            playerVelocityX += PLAYER_ACCELERATION_X;
-            playerVelocityX = Math.min(PLAYER_VELOCITY_X_MAX, playerVelocityX);
-        }
-
-        //Negative Velocity
-        else if (playerVelocityX > targetVelocity) {
-            playerVelocityX -= PLAYER_ACCELERATION_X;
-            playerVelocityX = Math.max(-PLAYER_VELOCITY_X_MAX, playerVelocityX);
-        }
+//        //Positive Velocity
+//        if (playerVelocityX < targetVelocity) {
+//            playerVelocityX += PLAYER_ACCELERATION_X;
+//            playerVelocityX = Math.min(PLAYER_VELOCITY_X_MAX, playerVelocityX);
+//        }
+//
+//        //Negative Velocity
+//        else if (playerVelocityX > targetVelocity) {
+//            playerVelocityX -= PLAYER_ACCELERATION_X;
+//            playerVelocityX = Math.max(-PLAYER_VELOCITY_X_MAX, playerVelocityX);
+//        }
     }
 
     private void updatePlayerTiltAnimation(float tiltPercent) {
@@ -275,6 +310,73 @@ public class GameModel {
                     || (p.rect().right < ((QUAD_X_SCALE - 1) / 2) * -canvasWidth)
                     || (p.rect().left > (((QUAD_X_SCALE - 1) / 2) * canvasWidth) + canvasWidth)) {
                 freeStars.add(e.getKey());
+            }
+        }
+    }
+
+    private void updateFlarePosition(double seconds) {
+        flarePosition.changeX(-playerVelocityX * seconds);
+        flarePosition.changeY(FLARE_VELOCITY_MAX * seconds);
+
+        if (flarePosition.getTop() > canvasHeight) {
+            flareActive = false;
+        }
+    }
+
+    private void seekToPosition(double seconds, double speedX, double speedY, SpritePosition source, SpritePosition dest) {
+        double xDiff = source.getCenterX() - dest.getCenterX();
+        //Object needs to move left
+        if (xDiff > 0) {
+            if (speedX * seconds > xDiff) {
+                source.setCenterX(dest.getCenterX());
+            }
+            else {
+                source.changeX(-speedX * seconds);
+            }
+        }
+        //Object needs to move right
+        else if (xDiff < 0) {
+            if (speedX * seconds > Math.abs(xDiff)) {
+                source.setCenterX(dest.getCenterX());
+            }
+            else {
+                source.changeX(speedX * seconds);
+            }
+        }
+
+        //Move y axis
+        double yDiff = source.getCenterY() - dest.getCenterY();
+        //Object needs to move up
+        if (yDiff > 0) {
+            if (speedY * seconds > yDiff) {
+                source.setCenterY(dest.getCenterY());
+            }
+            else {
+                source.changeY(-speedY * seconds);
+            }
+        }
+        //Object needs to move down
+        else if (yDiff < 0) {
+            if (speedY * seconds > Math.abs(yDiff)) {
+                source.setCenterY(dest.getCenterY());
+            }
+            else {
+                source.changeY(speedY * seconds);
+            }
+        }
+    }
+
+    private void updateMissilePosition(double seconds) {
+        if (missileActive) {
+            //Account for player movement
+            missilePosition.changeX(-playerVelocityX * seconds);
+
+            //Seek to target
+            if (flareActive) {
+                seekToPosition(seconds, MISSILE_VELOCITY_X_MAX, MISSILE_VELOCITY_Y_MAX, missilePosition, flarePosition);
+            }
+            else {
+                seekToPosition(seconds, MISSILE_VELOCITY_X_MAX, MISSILE_VELOCITY_Y_MAX, missilePosition, playerPosition);
             }
         }
     }
@@ -323,7 +425,7 @@ public class GameModel {
 //            }
 //        }
 
-        //TODO REPLACE THIS PART
+        //TODO REPLACE THIS PART WITH ABOVE
         //Re-assign rects to quadrants
         for (SpritePosition p : asteroidPositions) {
             boolean rectAdded = false;
@@ -401,6 +503,40 @@ public class GameModel {
         }
     }
 
+    private void createFlare(Gesture gesture) {
+        if (gesture == Gesture.SWIPE_DOWN && !flareActive) {
+            double left = playerPosition.getLeft() + (playerPosition.getWidth() / 2) - (flarePosition.getWidth() / 2);
+            double top = playerPosition.getTop() + playerPosition.getHeight();
+
+            flarePosition.setLeft(left);
+            flarePosition.setTop(top);
+
+            flareActive = true;
+        }
+    }
+
+    private void createMissile(Gesture gesture) {
+        lastMissileMS += Math.abs(lastUpdateDeltaMS);
+        if (!missileActive) {
+            boolean create = false;
+
+            if (lastMissileMS > 3000) {
+                create = rand.nextBoolean();
+                lastMissileMS = 0;
+            }
+
+            if (gesture == Gesture.SWIPE_UP || create) {
+                double left = playerPosition.getLeft() + (playerPosition.getWidth() / 2) - (missilePosition.getWidth() / 2);
+                double top = canvasHeight;
+
+                missilePosition.setLeft(left);
+                missilePosition.setTop(top);
+
+                missileActive = true;
+            }
+        }
+    }
+
     private void checkAsteroidCollisions() {
         for (Quadrant q : playerQuads) {
             if (!q.isEmptyAsteroids()) {
@@ -439,6 +575,23 @@ public class GameModel {
         return false;
     }
 
+    private void checkMissileCollision() {
+        //Missile -> Flare (reset their positions off screen)
+        if (isCollision(missilePosition.rect(), missileSprite, flarePosition.rect(), flareSprite)) {
+            missilePosition.setLeft(canvasWidth);
+            missilePosition.setTop(canvasHeight);
+            flarePosition.setLeft(canvasWidth);
+            flarePosition.setTop(canvasHeight);
+            missileActive = false;
+            flareActive = false;
+        }
+        //Missile -> Player (set health to 0)
+        else if (isCollision(missilePosition.rect(), missileSprite, playerPosition.rect(), playerSprite)) {
+            playerHealth = 0;
+            missileActive = false;
+        }
+    }
+
     private void updateIsGameOver() {
         if (playerHealth == 0) {
             isGameOver = true;
@@ -475,6 +628,22 @@ public class GameModel {
 
     public Sprite getAsteroidSprite() {
         return asteroidSprite;
+    }
+
+    public Sprite getFlareSprite() {
+        return flareSprite;
+    }
+
+    public Sprite getMissileSprite() {
+        return missileSprite;
+    }
+
+    public SpritePosition getFlarePosition() {
+        return flarePosition;
+    }
+
+    public SpritePosition getMissilePosition() {
+        return missilePosition;
     }
 
     public HashMap<SpritePosition, Integer> getStars() {

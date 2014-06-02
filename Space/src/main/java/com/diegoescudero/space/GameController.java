@@ -8,11 +8,14 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.v4.view.MotionEventCompat;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -23,18 +26,24 @@ public class GameController extends Activity implements SensorEventListener {
     private GameThread gameThread = null;
 
     private ImageButton pauseButton;
+    private TextView healthBar;
 
     private SensorManager sManager;
     private Sensor accelerometer;
-    private ArrayList<Float> tilts = new ArrayList<Float>();
+    private PowerManager.WakeLock wakeLock;
+
     private float tilt = 0;
 
-    private int playerShots = 0;
+    private Gesture gesture = null;
+    private float gestureStartX;
+    private float gestureStartY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_screen);
+        PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "wakeLock");
 
         gameModel = new GameModel(this);
 
@@ -47,18 +56,21 @@ public class GameController extends Activity implements SensorEventListener {
     protected void onPause() {
         super.onPause();
         sManager.unregisterListener(this);
+        wakeLock.release();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+        wakeLock.acquire();
     }
 
     private void initLayout() {
         gameView = (GameView)findViewById(R.id.gameView);
         gameView.setGameModel(gameModel);
         pauseButton = (ImageButton)findViewById(R.id.optionsButton);
+        healthBar = (TextView)findViewById(R.id.healthBar);
 
         SurfaceHolder holder = gameView.getHolder();
         if (holder != null) {
@@ -96,7 +108,16 @@ public class GameController extends Activity implements SensorEventListener {
 
                 switch(action) {
                     case MotionEvent.ACTION_DOWN:
-                        playerShots++;
+                        gestureStartX = event.getX();
+                        gestureStartY = event.getY();
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        if (gestureStartY < event.getY()) {
+                            gesture = Gesture.SWIPE_DOWN;
+                        }
+                        else if (gestureStartY > event.getY()) {
+                            gesture = Gesture.SWIPE_UP;
+                        }
                         return true;
                 }
 
@@ -115,10 +136,6 @@ public class GameController extends Activity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         tilt = -event.values[0];
-//        float x = event.values[0];
-//        synchronized (tilts) {
-//            tilts.add(-x);
-//        }
     }
 
     @Override
@@ -178,26 +195,17 @@ public class GameController extends Activity implements SensorEventListener {
     }
 
     public float getCurrentTilt() {
-//        float avg = 0;
-//
-//        synchronized (tilts) {
-//            int size = tilts.size();
-//
-//            for (float f : tilts) {
-//                avg += f / size;
-//            }
-//
-//            tilts.clear();
-//        }
-//
-//        return avg;
         return tilt;
     }
 
-    public int getPlayerShots() {
-        int temp = playerShots;
-        playerShots = 0;
+    public Gesture getGesture() {
+        Gesture t = gesture;
+        gesture = null;
 
-        return temp;
+        return t;
+    }
+
+    public void setHealth(long health) {
+        healthBar.setText(health + "");
     }
 }

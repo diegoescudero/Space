@@ -53,16 +53,24 @@ public class GameThread extends Thread {
                 lastTimeMS = currentTimeMS;
 
                 //Update
-                gameModel.update(smoothedDeltaTimeMS / 1000.0d, gameController.getCurrentTilt());
+                gameModel.update(smoothedDeltaTimeMS / 1000.0d, gameController.getCurrentTilt(), gameController.getGesture());
 
                 //Game Over?
                 if (gameModel.isGameOver()) { running = false; }
 
                 //Draw
-//                synchronized (gameView.getHolder()) {
 //                   gameModel.drawToCanvas(canvas);
                     gameView.onDraw(canvas);
-//                }
+
+                //Set FPS
+//                final long frameTime = Math.round(Math.abs(avgDeltaTimeMS));
+//                gameController.runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        gameController.setHealth(Math.round(1.0d / (frameTime / 1000.0d)));
+//                    }
+//                });
+
             }
             //Release canvas
             finally {

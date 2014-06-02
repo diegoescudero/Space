@@ -16,14 +16,17 @@ public class GameView extends SurfaceView {
 
     public GameView(Context context) {
         super(context);
+        setKeepScreenOn(true);
     }
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setKeepScreenOn(true);
     }
 
     public GameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        setKeepScreenOn(true);
     }
 
     public void setGameModel(GameModel gameModel) {
@@ -63,6 +66,16 @@ public class GameView extends SurfaceView {
                     canvas.drawBitmap(asteroid.getBitmap(), asteroid.getFrameRect(), p.rect(), null);
                 }
             }
+
+            //Draw Flare
+            Sprite flare = gameModel.getFlareSprite();
+            SpritePosition flarePosition = gameModel.getFlarePosition();
+            canvas.drawBitmap(flare.getBitmap(), flare.getFrameRect(), flarePosition.rect(), null);
+
+            //Draw Flare
+            Sprite missile = gameModel.getMissileSprite();
+            SpritePosition missilePosition = gameModel.getMissilePosition();
+            canvas.drawBitmap(missile.getBitmap(), missile.getFrameRect(), missilePosition.rect(), null);
         }
     }
 }

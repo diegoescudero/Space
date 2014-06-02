@@ -19,10 +19,13 @@ public class SpritePosition {
         currentPosition = new Rect((int)Math.round(left), (int)Math.round(top), (int)Math.round(left + width), (int)Math.round(top + height));
     }
 
-    private void recalculateRect() {
+    private void recalculateRectX() {
         currentPosition.left = (int)Math.round(left);
-        currentPosition.top = (int)Math.round(top);
         currentPosition.right = (int)Math.round(left + width);
+    }
+
+    private void recalculateRectY() {
+        currentPosition.top = (int)Math.round(top);
         currentPosition.bottom = (int)Math.round(top + height);
     }
 
@@ -33,8 +36,7 @@ public class SpritePosition {
     public void setWidth(int width) {
         this.width = width;
 
-        currentPosition.left = (int)Math.round(left);
-        currentPosition.right = (int)Math.round(left + width);
+        recalculateRectX();
     }
 
     public int getHeight() {
@@ -44,38 +46,59 @@ public class SpritePosition {
     public void setHeight(int height) {
         this.height = height;
 
-        currentPosition.top = (int)Math.round(top);
-        currentPosition.bottom = (int)Math.round(top + height);
+        recalculateRectY();
+    }
+
+    public double getLeft() {
+        return left;
     }
 
     public void setLeft(double p) {
         left = p;
 
-        currentPosition.left = (int)Math.round(left);
-        currentPosition.right = (int)Math.round(left + width);
+        recalculateRectX();
+    }
+
+    public double getTop() {
+        return top;
     }
 
     public void setTop(double p) {
         top = p;
 
-        currentPosition.top = (int)Math.round(top);
-        currentPosition.bottom = (int)Math.round(top + height);
+        recalculateRectY();
     }
 
     public void changeX(double p) {
         left += p;
 
-        int pixelLeft = (int)Math.round(left);
-        currentPosition.left = pixelLeft;
-        currentPosition.right = pixelLeft + width;
+        recalculateRectX();
     }
 
     public void changeY(double p) {
         top += p;
 
-        int pixelTop = (int)Math.round(top);
-        currentPosition.top = pixelTop;
-        currentPosition.bottom = pixelTop + height;
+        recalculateRectY();
+    }
+
+    public double getCenterX() {
+        return left + width / 2;
+    }
+
+    public double getCenterY() {
+        return top + height / 2;
+    }
+
+    public void setCenterX(double center) {
+        left = center - (width / 2);
+
+        recalculateRectX();
+    }
+
+    public void setCenterY(double center) {
+        top = center - (height / 2);
+
+        recalculateRectY();
     }
 
     public Rect rect() {
