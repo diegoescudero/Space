@@ -8,16 +8,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.PowerManager;
-import android.support.v4.view.MotionEventCompat;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
-import java.util.ArrayList;
 
 public class GameController extends Activity implements SensorEventListener {
 
@@ -25,12 +20,11 @@ public class GameController extends Activity implements SensorEventListener {
     private GameModel gameModel;
     private GameThread gameThread = null;
 
-    private ImageButton pauseButton;
-    private TextView healthBar;
+//    private ImageButton pauseButton;
+//    private TextView healthBar;
 
     private SensorManager sManager;
     private Sensor accelerometer;
-    private PowerManager.WakeLock wakeLock;
 
     private float tilt = 0;
 
@@ -42,8 +36,6 @@ public class GameController extends Activity implements SensorEventListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_screen);
-        PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "wakeLock");
 
         gameModel = new GameModel(this);
 
@@ -56,21 +48,19 @@ public class GameController extends Activity implements SensorEventListener {
     protected void onPause() {
         super.onPause();
         sManager.unregisterListener(this);
-        wakeLock.release();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         sManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
-        wakeLock.acquire();
     }
 
     private void initLayout() {
         gameView = (GameView)findViewById(R.id.gameView);
         gameView.setGameModel(gameModel);
-        pauseButton = (ImageButton)findViewById(R.id.optionsButton);
-        healthBar = (TextView)findViewById(R.id.healthBar);
+//        pauseButton = (ImageButton)findViewById(R.id.optionsButton);
+//        healthBar = (TextView)findViewById(R.id.healthBar);
 
         SurfaceHolder holder = gameView.getHolder();
         if (holder != null) {
@@ -92,19 +82,19 @@ public class GameController extends Activity implements SensorEventListener {
     }
 
     private void initListeners() {
-        pauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                Intent intent = new Intent(GameController.this, MenuMain.class);
-//                startActivity(intent);
-                finish();
-            }
-        });
+//        pauseButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+////                Intent intent = new Intent(GameController.this, MenuMain.class);
+////                startActivity(intent);
+//                finish();
+//            }
+//        });
 
         gameView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                int action = MotionEventCompat.getActionMasked(event);
+                int action = event.getActionMasked();
 
                 switch(action) {
                     case MotionEvent.ACTION_DOWN:
@@ -206,6 +196,6 @@ public class GameController extends Activity implements SensorEventListener {
     }
 
     public void setHealth(long health) {
-        healthBar.setText(health + "");
+//        healthBar.setText(health + "");
     }
 }

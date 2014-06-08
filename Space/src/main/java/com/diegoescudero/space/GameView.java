@@ -3,13 +3,11 @@ package com.diegoescudero.space;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.SurfaceView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class GameView extends SurfaceView {
     GameModel gameModel;

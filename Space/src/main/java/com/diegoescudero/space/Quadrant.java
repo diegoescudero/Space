@@ -2,7 +2,6 @@ package com.diegoescudero.space;
 
 import android.graphics.Rect;
 
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Quadrant {

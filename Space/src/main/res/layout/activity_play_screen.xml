@@ -9,21 +9,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <TextView
-        android:id="@+id/healthBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|left"
-        android:textColor="#ff18ff33"
-        android:text="Health"/>
+    <!--<TextView-->
+        <!--android:id="@+id/healthBar"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="top|left"-->
+        <!--android:textColor="#ff18ff33"-->
+        <!--android:text="Health"/>-->
 
-    <ImageButton
-        android:id="@+id/optionsButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="top|right"
-        android:contentDescription="@null"
-        android:background="@drawable/gear"/>
+    <!--<ImageButton-->
+        <!--android:id="@+id/optionsButton"-->
+        <!--android:layout_width="40dp"-->
+        <!--android:layout_height="40dp"-->
+        <!--android:layout_gravity="top|right"-->
+        <!--android:contentDescription="@null"-->
+        <!--android:background="@drawable/gear"/>-->
 
 </FrameLayout>
 
